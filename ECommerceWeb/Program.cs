@@ -1,12 +1,20 @@
 
+using E_Commerce.Domain.Contracts;
+using E_Commerce.Persistence.Data.DataSeed;
 using E_Commerce.Persistence.Data.DbContexts;
+using E_Commerce.Persistence.Repositories;
+using E_Commerce.Services;
+using E_Commerce.Services.MappingProfiles;
+using E_Commerce.services_Abstraction;
+using ECommerceWeb.Extensions;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace ECommerceWeb
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +31,46 @@ namespace ECommerceWeb
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
+            builder.Services.AddScoped<IDataIntializer, DataIntializer>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            //builder.Services.AddAutoMapper(x => x.AddProfile(new ProductProfile()));
+            //builder.Services.AddAutoMapper(x => x.AddProfile<ProductProfile>());
+
+            builder.Services.AddAutoMapper(typeof(ServiceAssemblyReference).Assembly);
+
+            //builder.Services.AddAutoMapper(x => x.LicenseKey = "", typeof(ProductProfile).Assembly);
+
+            builder.Services.AddScoped<IProductService, ProductService>();
+
+            builder.Services.AddTransient<ProductPictureUrlResolver>();
+
+
             #endregion
             var app = builder.Build();
+
+
+            #region Data Seed - Apply Migration
+
+            //using var Scope = app.Services.CreateScope();
+
+            //var DbContextService = Scope.ServiceProvider.GetRequiredService<StoreDbContext>();
+            //if (DbContextService.Database.GetPendingMigrations().Any())
+            //    DbContextService.Database.Migrate();
+
+
+            //var DataIntializerService = Scope.ServiceProvider.GetRequiredService<IDataIntializer>();
+            //DataIntializerService.Intialize();
+
+
+            //app.MigrateDatabase();
+            //app.SeedDatabase();
+
+            await app.MigrateDatabaseAsync();
+            await app.SeedDatabaseAsync();
+
+
+            #endregion
+
 
             #region Configure the HTTP request pipeline.
             // Configure the HTTP request pipeline.
@@ -36,12 +82,12 @@ namespace ECommerceWeb
 
             app.UseHttpsRedirection();
 
-
+            app.UseStaticFiles();
 
             app.MapControllers();
             #endregion
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }
