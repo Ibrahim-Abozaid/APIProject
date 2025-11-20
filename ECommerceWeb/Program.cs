@@ -8,6 +8,7 @@ using E_Commerce.Services.MappingProfiles;
 using E_Commerce.services_Abstraction;
 using ECommerceWeb.Extensions;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using System.Threading.Tasks;
 
 namespace ECommerceWeb
@@ -44,6 +45,16 @@ namespace ECommerceWeb
 
             builder.Services.AddTransient<ProductPictureUrlResolver>();
 
+
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                return ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")!);
+            });
+
+
+            builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+
+            builder.Services.AddScoped<IBasketService, BasketService>();
 
             #endregion
             var app = builder.Build();
