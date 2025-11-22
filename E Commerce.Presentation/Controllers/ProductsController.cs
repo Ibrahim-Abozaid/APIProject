@@ -1,6 +1,7 @@
 ﻿using E_Commerce.services_Abstraction;
 using E_Commerce.Shared;
 using E_Commerce.Shared.DTOs.ProductDTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace E_Commerce.Presentation.Controllers
 
         [HttpGet]
         //  Get : BaseUrl/api/Products
-        public async Task<ActionResult<PaginatedResult<ProductDTO>>> GetProducts([FromQuery]ProductQueryParams queryParams)
+        public async Task<ActionResult<PaginatedResult<ProductDTO>>> GetProducts([FromQuery] ProductQueryParams queryParams)
         {
             var Products = await _productService.GetAllProductsAsync(queryParams);
 
@@ -34,9 +35,10 @@ namespace E_Commerce.Presentation.Controllers
         //  Get : BaseUrl/api/Products/{id}
         public async Task<ActionResult<ProductDTO>> GetProduct(int id)
         {
-            var product = await _productService.GetProductByIdAsync(id);
 
+            var product = await _productService.GetProductByIdAsync(id);
             return Ok(product);
+
         }
 
         [HttpGet("brands")]
