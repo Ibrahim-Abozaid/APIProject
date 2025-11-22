@@ -6,7 +6,10 @@ using E_Commerce.Persistence.Repositories;
 using E_Commerce.Services;
 using E_Commerce.Services.MappingProfiles;
 using E_Commerce.services_Abstraction;
+using ECommerceWeb.CustomMiddleWares;
 using ECommerceWeb.Extensions;
+using ECommerceWeb.Factories;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using System.Threading.Tasks;
@@ -56,6 +59,15 @@ namespace ECommerceWeb
 
             builder.Services.AddScoped<IBasketService, BasketService>();
 
+            builder.Services.AddScoped<ICacheRepository, CacheRepository>();
+
+            builder.Services.AddScoped<ICacheService, CacheService>();
+
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = ApiResponseFactory.GenerateApiValidationResponse;
+            });
+
             #endregion
             var app = builder.Build();
 
@@ -83,8 +95,30 @@ namespace ECommerceWeb
             #endregion
 
 
-            #region Configure the HTTP request pipeline.
+            #region Configure the HTTP request pipeline. [middlewares]
             // Configure the HTTP request pipeline.
+
+            //app.Use(async (Context, Next) =>
+            //{
+            //    try
+            //    {
+            //        await Next.Invoke(Context);
+            //    }catch(Exception ex)
+            //    {
+            //        Console.WriteLine(ex.Message);
+            //        Context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            //        await Context.Response.WriteAsJsonAsync(new
+            //        {
+            //            StatusCode = StatusCodes.Status500InternalServerError,
+            //            Error = $"An Unexpected Error Occured : {ex.Message} "
+            //        });
+            //    }
+            //});
+
+            app.UseMiddleware<ExceptionHandlerMiddleWare>();
+
+
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
