@@ -12,10 +12,13 @@ using E_Commerce.services_Abstraction;
 using ECommerceWeb.CustomMiddleWares;
 using ECommerceWeb.Extensions;
 using ECommerceWeb.Factories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ECommerceWeb
@@ -86,6 +89,25 @@ namespace ECommerceWeb
                   .AddEntityFrameworkStores<StoreIdentityDbContext>();
 
 
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = builder.Configuration["JWTOptions:Issuer"],
+                    ValidAudience = builder.Configuration["JWTOptions:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTOptions:SecurityKey"]!)),
+                };
+            });
+
+
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             #endregion
             var app = builder.Build();
@@ -117,7 +139,8 @@ namespace ECommerceWeb
 
 
             #region Configure the HTTP request pipeline. [middlewares]
-            // Configure the HTTP request pipeline.
+
+            /*// Configure the HTTP request pipeline.
 
             //app.Use(async (Context, Next) =>
             //{
@@ -134,7 +157,7 @@ namespace ECommerceWeb
             //            Error = $"An Unexpected Error Occured : {ex.Message} "
             //        });
             //    }
-            //});
+            //});*/
 
             app.UseMiddleware<ExceptionHandlerMiddleWare>();
 
@@ -147,6 +170,9 @@ namespace ECommerceWeb
             }
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseStaticFiles();
 

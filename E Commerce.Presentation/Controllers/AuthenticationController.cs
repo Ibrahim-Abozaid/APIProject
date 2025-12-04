@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace E_Commerce.Presentation.Controllers
 {
@@ -32,6 +34,25 @@ namespace E_Commerce.Presentation.Controllers
         {
             var Result = await _authenticationService.RegisterAsync(registerDTO);
             return HandleResult(Result);
+        }
+
+        [HttpGet("emailExists")]
+        public async Task<ActionResult<bool>> CheckEmail(string email)
+        {
+            var result = await _authenticationService.CheckEmailAsync(email);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("currentUser")]
+        public async Task<ActionResult<UserDTO>> GetCurrentUser()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var Result = await _authenticationService.GetUserByEmailAsync(email!);
+            return HandleResult(Result);
+
+
+
         }
     }
 }
